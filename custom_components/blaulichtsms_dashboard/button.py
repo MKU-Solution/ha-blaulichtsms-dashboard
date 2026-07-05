@@ -45,10 +45,15 @@ class BlaulichtSMSTestAlarmButton(CoordinatorEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         now_str = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        
+        alarm_text = "Generierter Probealarm via Home Assistant Button."
+        if self.coordinator.data and len(self.coordinator.data) > 0:
+            alarm_text = self.coordinator.data[0].get("alarmText", alarm_text)
+            
         fake_data = [
             {
                 "alarmDate": now_str,
-                "alarmText": "Generierter Probealarm via Home Assistant Button.",
+                "alarmText": alarm_text,
                 "authorName": "Home Assistant",
                 "isTestAlarm": True,
                 "alarmGroups": [{"groupName": "Test Gruppe"}],
