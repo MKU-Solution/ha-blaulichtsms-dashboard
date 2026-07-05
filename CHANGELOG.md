@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.3.0...v1.4.0) (2026-07-05)
+
+
+### Features
+
+* Add text cleanup for TTS and add tts_text attribute to repeat button ([3715796](https://github.com/seipekm/ha-blaulichtsms-dashboard/commit/37157964d2664bb0b085404c289d80f3b9ab2d7a))
+
+
+### Bug Fixes
+
+* Keep T and B alarm codes unchanged for TTS ([d446f1b](https://github.com/seipekm/ha-blaulichtsms-dashboard/commit/d446f1b9c751052937de64b01293f2911d0c1faf))
+
 ## [1.3.0](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.2.0...v1.3.0) (2026-07-05)
 
 
