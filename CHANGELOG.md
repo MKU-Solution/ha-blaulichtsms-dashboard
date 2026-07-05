@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.4.0...v1.5.0) (2026-07-05)
+
+
+### Features
+
+* Use actual alarm text for generated test alarm ([fe46796](https://github.com/seipekm/ha-blaulichtsms-dashboard/commit/fe46796774219a9c4251423dc0c69de50fd9cb5a))
+
 ## [1.4.0](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.3.0...v1.4.0) (2026-07-05)
 
 
