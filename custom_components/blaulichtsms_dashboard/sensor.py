@@ -35,6 +35,20 @@ def is_alarm_active(data) -> bool:
         return True
 
 
+def generate_tts_text(data) -> str:
+    """Generate a TTS friendly text."""
+    if not is_alarm_active(data):
+        return "Kein aktiver Alarm"
+    
+    alarm_text = data[0].get("alarmText", "")
+    is_probe = "probe" in alarm_text.lower() or data[0].get("isTestAlarm", False)
+    
+    if is_probe:
+        return f"Achtung, dies ist ein Probealarm! {alarm_text}"
+    else:
+        return f"Achtung, Einsatzalarm! {alarm_text}"
+
+
 @dataclass(frozen=True, kw_only=True)
 class BlaulichtSMSSensorEntityDescription(SensorEntityDescription):
     """Describes BlaulichtSMS sensor entity."""
@@ -111,6 +125,12 @@ SENSOR_TYPES: tuple[BlaulichtSMSSensorEntityDescription, ...] = (
             data[0].get("coordinates") or 
             "Unbekannt"
         ) if data else "Kein Alarm",
+    ),
+    BlaulichtSMSSensorEntityDescription(
+        key="tts_text",
+        name="TTS Text",
+        icon="mdi:speaker-message",
+        value_fn=lambda data: generate_tts_text(data),
     ),
 )
 
