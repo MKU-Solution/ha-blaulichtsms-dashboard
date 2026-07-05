@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.0.9...v1.1.0) (2026-07-05)
+
+
+### Features
+
+* Add TTS text sensor ([49b49f0](https://github.com/seipekm/ha-blaulichtsms-dashboard/commit/49b49f07576bc0a4acd3415d54c439efb985ad59))
+
 ## [1.0.7](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.0.6...v1.0.7) (2026-06-15)
 
 
