@@ -51,13 +51,6 @@ def clean_for_tts(text: str) -> str:
         r"\bNEF\b": "Notarzteinsatzfahrzeug",
         r"\bFF\b": "Freiwillige Feuerwehr",
         r"\bBF\b": "Berufsfeuerwehr",
-        r"\bT01\b": "Technischer Einsatz eins",
-        r"\bT02\b": "Technischer Einsatz zwei",
-        r"\bT03\b": "Technischer Einsatz drei",
-        r"\bB01\b": "Brandeinsatz eins",
-        r"\bB02\b": "Brandeinsatz zwei",
-        r"\bB03\b": "Brandeinsatz drei",
-        r"\bB04\b": "Brandeinsatz vier",
     }
     
     for pattern, replacement in replacements.items():
