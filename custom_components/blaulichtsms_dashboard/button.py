@@ -7,6 +7,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .sensor import generate_tts_text
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -78,6 +79,12 @@ class BlaulichtSMSRepeatTTSButton(CoordinatorEntity, ButtonEntity):
             "name": f"BlaulichtSMS ({self.coordinator.username})",
             "manufacturer": "BlaulichtSMS",
         }
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        tts_text = generate_tts_text(self.coordinator.data)
+        return {"tts_text": tts_text}
 
     async def async_press(self) -> None:
         """Handle the button press."""

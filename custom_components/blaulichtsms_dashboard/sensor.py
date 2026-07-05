@@ -35,13 +35,50 @@ def is_alarm_active(data) -> bool:
         return True
 
 
+import re
+
+def clean_for_tts(text: str) -> str:
+    """Prepare text for Text-to-Speech."""
+    if not text:
+        return ""
+    
+    replacements = {
+        r"\bVU\b": "Verkehrsunfall",
+        r"\bBMA\b": "Brandmeldeanlage",
+        r"\bPKW\b": "Personenkraftwagen",
+        r"\bLKW\b": "Lastkraftwagen",
+        r"\bRTW\b": "Rettungswagen",
+        r"\bNEF\b": "Notarzteinsatzfahrzeug",
+        r"\bFF\b": "Freiwillige Feuerwehr",
+        r"\bBF\b": "Berufsfeuerwehr",
+        r"\bT01\b": "Technischer Einsatz eins",
+        r"\bT02\b": "Technischer Einsatz zwei",
+        r"\bT03\b": "Technischer Einsatz drei",
+        r"\bB01\b": "Brandeinsatz eins",
+        r"\bB02\b": "Brandeinsatz zwei",
+        r"\bB03\b": "Brandeinsatz drei",
+        r"\bB04\b": "Brandeinsatz vier",
+    }
+    
+    for pattern, replacement in replacements.items():
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    
+    # Remove special characters
+    text = re.sub(r"[-/*_~#|+]", " ", text)
+    
+    # Cleanup spaces
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
 def generate_tts_text(data) -> str:
     """Generate a TTS friendly text."""
     if not is_alarm_active(data):
         return "Kein aktiver Alarm"
     
-    alarm_text = data[0].get("alarmText", "")
-    is_probe = "probe" in alarm_text.lower() or data[0].get("isTestAlarm", False)
+    raw_text = data[0].get("alarmText", "")
+    alarm_text = clean_for_tts(raw_text)
+    
+    is_probe = "probe" in raw_text.lower() or data[0].get("isTestAlarm", False)
     
     if is_probe:
         return f"Achtung, dies ist ein Probealarm! {alarm_text}"
