@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.1.0...v1.2.0) (2026-07-05)
+
+
+### Features
+
+* Add button to trigger test alarm ([10adedc](https://github.com/seipekm/ha-blaulichtsms-dashboard/commit/10adedce2d6edc29efcfb12f3590cfeccd4ff433))
+
 ## [1.1.0](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.0.9...v1.1.0) (2026-07-05)
 
 
