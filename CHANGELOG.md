@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.2.0...v1.3.0) (2026-07-05)
+
+
+### Features
+
+* Add button to repeat TTS ([2b20f69](https://github.com/seipekm/ha-blaulichtsms-dashboard/commit/2b20f69569019f1f8b6fdc00f8687ec776c68502))
+
 ## [1.2.0](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.1.0...v1.2.0) (2026-07-05)
 
 
