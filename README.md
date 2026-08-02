@@ -10,7 +10,9 @@ Eine Home Assistant Custom Component, um aktive Einsatzalarme von [BlaulichtSMS]
 - Fragt die BlaulichtSMS Dashboard API ab.
 - Asynchrones Polling.
 - Eigener Sensor mit Einsatzdetails (Ort, alarmierte Gruppen, Anzahl Zugesagt/Abgesagt).
-- Einfache Einrichtung über die Home Assistant Benutzeroberfläche.
+- Binary Sensor **Einsatz Aktiv** als sprachneutraler Auslöser für Automatisierungen.
+- Aufbereiteter **TTS Text** für Sprachdurchsagen.
+- Einfache Einrichtung über die Home Assistant Benutzeroberfläche, inkl. Prüfung der Zugangsdaten.
 
 ## Voraussetzungen
 
@@ -42,7 +44,9 @@ Bevor du diese Integration nutzen kannst, musst du zwingend ein **Dashboard (Ein
 
 ## Automatisierungs-Beispiel
 
-Sobald ein Einsatz eingeht, wechselt der Sensor **Einsatzstatus** von `Inaktiv` auf `Aktiv`. Nach einer Stunde ohne neues Alarm-Datum wechselt er automatisch zurück. Diesen Statuswechsel kannst du optimal als Auslöser (Trigger) für Home Assistant Automatisierungen nutzen.
+Sobald ein Einsatz eingeht, schaltet der Binary Sensor **Einsatz Aktiv** auf `on`. Nach einer Stunde ohne neues Alarm-Datum schaltet er automatisch zurück. Diesen Wechsel kannst du optimal als Auslöser (Trigger) für Home Assistant Automatisierungen nutzen. Parallel gibt es weiterhin den Sensor **Einsatzstatus** mit den Werten `Aktiv` / `Inaktiv`.
+
+> **Hinweis zu den Entity-IDs:** die Entities tragen den Namen des Dashboard-Benutzers, heißen also z.B. `binary_sensor.blaulichtsms_monitor_einsatz_aktiv`. Schau die exakten IDs in den Entwicklerwerkzeugen nach und passe die Beispiele unten an.
 
 Hier ist ein Beispiel, wie du bei einem Alarm automatisch das Licht einschaltest und eine Push-Nachricht mit dem Einsatzort auf dein Handy schickst:
 
@@ -51,15 +55,15 @@ alias: "Feuerwehr: Neuer Alarm (BlaulichtSMS)"
 description: "Wird ausgelöst, wenn ein neuer Alarm über BlaulichtSMS reinkommt."
 mode: single
 
-trigger:
-  - platform: state
-    entity_id: sensor.blaulichtsms_einsatzstatus
-    from: "Inaktiv"
-    to: "Aktiv"
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.blaulichtsms_einsatz_aktiv
+    from: "off"
+    to: "on"
 
-action:
+actions:
   # 1. Licht im Flur einschalten (Beispiel)
-  - service: light.turn_on
+  - action: light.turn_on
     target:
       entity_id: light.flur
     data:
@@ -67,12 +71,38 @@ action:
       color_name: red
 
   # 2. Eine Push-Benachrichtigung mit allen Infos an dein Handy schicken
-  - service: notify.notify
+  - action: notify.notify
     data:
       title: "🚨 FEUERWEHR EINSATZ 🚨"
       message: >
-        Alarmierungs-Text: {{ states('sensor.blaulichtsms_alarm_text') }}
-        
+        Alarmierungs-Text: {{ state_attr('sensor.blaulichtsms_alarm_text', 'full_value') }}
+
         Einsatzort: {{ states('sensor.blaulichtsms_einsatzort') }}
         Alarmierte Gruppen: {{ states('sensor.blaulichtsms_alarm_gruppen') }}
+```
+
+### Lange Alarmtexte
+
+Home Assistant erlaubt für den Zustand einer Entity maximal 255 Zeichen. Längere Alarmtexte werden im Zustand gekürzt (erkennbar am `…` am Ende) — der **vollständige** Text steht immer im Attribut `full_value`:
+
+```jinja
+{{ state_attr('sensor.blaulichtsms_alarm_text', 'full_value') }}
+```
+
+### Sprachdurchsage (TTS)
+
+Der Sensor **TTS Text** liefert einen vorlesbaren Text, in dem Abkürzungen wie `VU` oder `BMA` ausgeschrieben und Sonderzeichen entfernt sind. Der Knopf **TTS Wiederholen** feuert zusätzlich das Event `blaulichtsms_dashboard_repeat_tts` mit dem Text im Payload:
+
+```yaml
+triggers:
+  - trigger: event
+    event_type: blaulichtsms_dashboard_repeat_tts
+
+actions:
+  - action: tts.speak
+    target:
+      entity_id: tts.piper
+    data:
+      media_player_entity_id: media_player.wohnzimmer
+      message: "{{ trigger.event.data.tts_text }}"
 ```
