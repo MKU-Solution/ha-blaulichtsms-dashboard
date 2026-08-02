@@ -1,82 +1,38 @@
 """Sensor platform for BlaulichtSMS Dashboard."""
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone, timedelta
 from typing import Any
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .entity import BlaulichtSMSEntity
+from .helpers import (
+    clean_for_tts,
+    generate_tts_text,
+    is_alarm_active,
+    truncate_state,
+)
 
+_LOGGER = logging.getLogger(__name__)
 
-def is_alarm_active(data) -> bool:
-    """Check if the latest alarm is active (younger than 1 hour)."""
-    if not data:
-        return False
-        
-    alarm_date_str = data[0].get("alarmDate")
-    if not alarm_date_str:
-        return True
-        
-    try:
-        alarm_date = datetime.fromisoformat(alarm_date_str.replace("Z", "+00:00"))
-        now = datetime.now(timezone.utc)
-        if now - alarm_date > timedelta(hours=1):
-            return False
-        return True
-    except Exception:
-        return True
-
-
-import re
-
-def clean_for_tts(text: str) -> str:
-    """Prepare text for Text-to-Speech."""
-    if not text:
-        return ""
-    
-    replacements = {
-        r"\bVU\b": "Verkehrsunfall",
-        r"\bBMA\b": "Brandmeldeanlage",
-        r"\bPKW\b": "Personenkraftwagen",
-        r"\bLKW\b": "Lastkraftwagen",
-        r"\bRTW\b": "Rettungswagen",
-        r"\bNEF\b": "Notarzteinsatzfahrzeug",
-        r"\bFF\b": "Freiwillige Feuerwehr",
-        r"\bBF\b": "Berufsfeuerwehr",
-    }
-    
-    for pattern, replacement in replacements.items():
-        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
-    
-    # Remove special characters
-    text = re.sub(r"[-/*_~#|+]", " ", text)
-    
-    # Cleanup spaces
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
-
-def generate_tts_text(data) -> str:
-    """Generate a TTS friendly text."""
-    if not is_alarm_active(data):
-        return "Kein aktiver Alarm"
-    
-    raw_text = data[0].get("alarmText", "")
-    alarm_text = clean_for_tts(raw_text)
-    
-    is_probe = "probe" in raw_text.lower() or data[0].get("isTestAlarm", False)
-    
-    if is_probe:
-        return f"Achtung, dies ist ein Probealarm! {alarm_text}"
-    else:
-        return f"Achtung, Einsatzalarm! {alarm_text}"
+# Re-Export für Rückwärtskompatibilität: bis v1.5.0 lagen diese Funktionen hier.
+__all__ = [
+    "clean_for_tts",
+    "generate_tts_text",
+    "is_alarm_active",
+    "truncate_state",
+]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -88,77 +44,84 @@ class BlaulichtSMSSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[BlaulichtSMSSensorEntityDescription, ...] = (
     BlaulichtSMSSensorEntityDescription(
         key="einsatzstatus",
-        name="Einsatzstatus",
+        translation_key="einsatzstatus",
         icon="mdi:fire-truck",
         value_fn=lambda data: "Aktiv" if is_alarm_active(data) else "Inaktiv",
     ),
     BlaulichtSMSSensorEntityDescription(
         key="aktive_alarme_anzahl",
-        name="Aktive Alarme Anzahl",
+        translation_key="aktive_alarme_anzahl",
         icon="mdi:counter",
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: len(data) if data else 0,
     ),
     BlaulichtSMSSensorEntityDescription(
         key="alarm_text",
-        name="Alarm Text",
+        translation_key="alarm_text",
         icon="mdi:text-box",
         value_fn=lambda data: data[0].get("alarmText", "Unbekannt") if data else "Kein Alarm",
     ),
     BlaulichtSMSSensorEntityDescription(
         key="alarm_date",
-        name="Alarm Datum",
-        icon="mdi:calendar-clock",
-        value_fn=lambda data: data[0].get("alarmDate", "Unbekannt") if data else "Kein Alarm",
+        translation_key="alarm_date",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: dt_util.parse_datetime(data[0]["alarmDate"])
+        if data and data[0].get("alarmDate")
+        else None,
     ),
     BlaulichtSMSSensorEntityDescription(
         key="alarm_autor",
-        name="Alarm Autor",
+        translation_key="alarm_autor",
         icon="mdi:account-hard-hat",
         value_fn=lambda data: data[0].get("authorName", "Unbekannt") if data else "Kein Alarm",
     ),
     BlaulichtSMSSensorEntityDescription(
         key="alarm_gruppen",
-        name="Alarm Gruppen",
+        translation_key="alarm_gruppen",
         icon="mdi:account-group",
         value_fn=lambda data: ", ".join(g.get("groupName", "") for g in data[0].get("alarmGroups", []) if g.get("groupName")) if data else "Keine",
     ),
     BlaulichtSMSSensorEntityDescription(
         key="anzahl_alarmiert",
-        name="Anzahl Alarmiert",
+        translation_key="anzahl_alarmiert",
         icon="mdi:account-multiple",
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[0].get("usersAlertedCount", 0) if data else 0,
     ),
     BlaulichtSMSSensorEntityDescription(
         key="teilnehmer_zugesagt",
-        name="Teilnehmer Zugesagt",
+        translation_key="teilnehmer_zugesagt",
         icon="mdi:account-check",
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: sum(1 for r in data[0].get("recipients", []) if r.get("participation") == "yes") if data else 0,
     ),
     BlaulichtSMSSensorEntityDescription(
         key="teilnehmer_abgesagt",
-        name="Teilnehmer Abgesagt",
+        translation_key="teilnehmer_abgesagt",
         icon="mdi:account-cancel",
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: sum(1 for r in data[0].get("recipients", []) if r.get("participation") == "no") if data else 0,
     ),
     BlaulichtSMSSensorEntityDescription(
         key="teilnehmer_ausstehend",
-        name="Teilnehmer Ausstehend",
+        translation_key="teilnehmer_ausstehend",
         icon="mdi:account-clock",
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: sum(1 for r in data[0].get("recipients", []) if r.get("participation") == "pending") if data else 0,
     ),
     BlaulichtSMSSensorEntityDescription(
         key="einsatzort",
-        name="Einsatzort",
+        translation_key="einsatzort",
         icon="mdi:map-marker",
         value_fn=lambda data: (
-            data[0].get("geolocation", {}).get("address") or 
-            data[0].get("coordinates") or 
+            data[0].get("geolocation", {}).get("address") or
+            data[0].get("coordinates") or
             "Unbekannt"
         ) if data else "Kein Alarm",
     ),
     BlaulichtSMSSensorEntityDescription(
         key="tts_text",
-        name="TTS Text",
+        translation_key="tts_text",
         icon="mdi:speaker-message",
         value_fn=lambda data: generate_tts_text(data),
     ),
@@ -181,31 +144,36 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class BlaulichtSMSSensor(CoordinatorEntity, SensorEntity):
+class BlaulichtSMSSensor(BlaulichtSMSEntity, SensorEntity):
     """Representation of a BlaulichtSMS Sensor."""
 
     entity_description: BlaulichtSMSSensorEntityDescription
 
     def __init__(self, coordinator, description: BlaulichtSMSSensorEntityDescription) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, description.key)
         self.entity_description = description
-        self._attr_has_entity_name = True
-        self._attr_unique_id = f"blaulichtsms_{coordinator.customer_id}_{description.key}"
 
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.customer_id)},
-            "name": f"BlaulichtSMS ({self.coordinator.username})",
-            "manufacturer": "BlaulichtSMS",
-        }
+    def _raw_value(self) -> Any:
+        """Return the untruncated value, or None if it cannot be computed."""
+        try:
+            return self.entity_description.value_fn(self.coordinator.data)
+        except Exception:
+            _LOGGER.exception(
+                "Wert für Sensor '%s' konnte nicht ermittelt werden",
+                self.entity_description.key,
+            )
+            return None
 
     @property
     def native_value(self) -> Any:
         """Return the state of the sensor."""
-        try:
-            return self.entity_description.value_fn(self.coordinator.data)
-        except Exception:
-            return None
+        return truncate_state(self._raw_value())
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Expose the untruncated value for text sensors."""
+        raw = self._raw_value()
+        if isinstance(raw, str):
+            return {"full_value": raw}
+        return None

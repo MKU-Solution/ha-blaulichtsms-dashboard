@@ -1,13 +1,16 @@
 """Button platform for BlaulichtSMS Dashboard."""
 from datetime import datetime, timezone
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .sensor import generate_tts_text
+from .entity import BlaulichtSMSEntity
+from .helpers import generate_tts_text
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -22,34 +25,30 @@ async def async_setup_entry(
     ])
 
 
-class BlaulichtSMSTestAlarmButton(CoordinatorEntity, ButtonEntity):
-    """Button to trigger a test alarm."""
+class BlaulichtSMSTestAlarmButton(BlaulichtSMSEntity, ButtonEntity):
+    """Button to trigger a test alarm.
+
+    Achtung: der Knopf überschreibt die Coordinator-Daten mit einem Fake-Alarm.
+    Ein laufender echter Alarm ist dadurch bis zum nächsten Poll verdeckt -
+    deshalb ist die Entity als Diagnose-Werkzeug eingestuft.
+    """
+
+    _attr_translation_key = "test_alarm"
+    _attr_icon = "mdi:alarm-light"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator) -> None:
         """Initialize the button."""
-        super().__init__(coordinator)
-        self._attr_has_entity_name = True
-        self._attr_name = "Test Alarm Auslösen"
-        self._attr_icon = "mdi:alarm-light"
-        self._attr_unique_id = f"blaulichtsms_{coordinator.customer_id}_test_alarm_btn"
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.customer_id)},
-            "name": f"BlaulichtSMS ({self.coordinator.username})",
-            "manufacturer": "BlaulichtSMS",
-        }
+        super().__init__(coordinator, "test_alarm_btn")
 
     async def async_press(self) -> None:
         """Handle the button press."""
         now_str = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        
+
         alarm_text = "Generierter Probealarm via Home Assistant Button."
         if self.coordinator.data and len(self.coordinator.data) > 0:
             alarm_text = self.coordinator.data[0].get("alarmText", alarm_text)
-            
+
         fake_data = [
             {
                 "alarmDate": now_str,
@@ -65,31 +64,20 @@ class BlaulichtSMSTestAlarmButton(CoordinatorEntity, ButtonEntity):
         self.coordinator.async_set_updated_data(fake_data)
 
 
-class BlaulichtSMSRepeatTTSButton(CoordinatorEntity, ButtonEntity):
+class BlaulichtSMSRepeatTTSButton(BlaulichtSMSEntity, ButtonEntity):
     """Button to repeat the current alarm text for TTS."""
+
+    _attr_translation_key = "repeat_tts"
+    _attr_icon = "mdi:bullhorn"
 
     def __init__(self, coordinator) -> None:
         """Initialize the button."""
-        super().__init__(coordinator)
-        self._attr_has_entity_name = True
-        self._attr_name = "TTS Wiederholen"
-        self._attr_icon = "mdi:bullhorn"
-        self._attr_unique_id = f"blaulichtsms_{coordinator.customer_id}_repeat_tts_btn"
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.customer_id)},
-            "name": f"BlaulichtSMS ({self.coordinator.username})",
-            "manufacturer": "BlaulichtSMS",
-        }
+        super().__init__(coordinator, "repeat_tts_btn")
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        tts_text = generate_tts_text(self.coordinator.data)
-        return {"tts_text": tts_text}
+        return {"tts_text": generate_tts_text(self.coordinator.data)}
 
     async def async_press(self) -> None:
         """Handle the button press."""
@@ -97,5 +85,9 @@ class BlaulichtSMSRepeatTTSButton(CoordinatorEntity, ButtonEntity):
         # This is enough to trigger an automation. We can optionally fire a custom event.
         self.hass.bus.async_fire(
             f"{DOMAIN}_repeat_tts",
-            {"customer_id": self.coordinator.customer_id}
+            {
+                "customer_id": self.coordinator.customer_id,
+                "entry_id": self.coordinator.config_entry.entry_id,
+                "tts_text": generate_tts_text(self.coordinator.data),
+            },
         )

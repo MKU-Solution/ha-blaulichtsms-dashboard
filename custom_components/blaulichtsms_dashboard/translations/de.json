@@ -10,6 +10,13 @@
           "password": "Passwort",
           "scan_interval": "Abfrage-Intervall (Sekunden)"
         }
+      },
+      "reauth_confirm": {
+        "title": "BlaulichtSMS Dashboard neu anmelden",
+        "description": "Das Dashboard hat die gespeicherten Zugangsdaten für {username} abgelehnt. Bitte gib das aktuelle Passwort ein.",
+        "data": {
+          "password": "Passwort"
+        }
       }
     },
     "error": {
@@ -18,7 +25,8 @@
       "unknown": "Unerwarteter Fehler"
     },
     "abort": {
-      "already_configured": "Das Konto ist bereits konfiguriert"
+      "already_configured": "Das Konto ist bereits konfiguriert",
+      "reauth_successful": "Die erneute Anmeldung war erfolgreich"
     }
   },
   "options": {
@@ -28,6 +36,59 @@
         "data": {
           "scan_interval": "Abfrage-Intervall (Sekunden)"
         }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "einsatz_aktiv": {
+        "name": "Einsatz Aktiv"
+      }
+    },
+    "sensor": {
+      "einsatzstatus": {
+        "name": "Einsatzstatus"
+      },
+      "aktive_alarme_anzahl": {
+        "name": "Aktive Alarme Anzahl"
+      },
+      "alarm_text": {
+        "name": "Alarm Text"
+      },
+      "alarm_date": {
+        "name": "Alarm Datum"
+      },
+      "alarm_autor": {
+        "name": "Alarm Autor"
+      },
+      "alarm_gruppen": {
+        "name": "Alarm Gruppen"
+      },
+      "anzahl_alarmiert": {
+        "name": "Anzahl Alarmiert"
+      },
+      "teilnehmer_zugesagt": {
+        "name": "Teilnehmer Zugesagt"
+      },
+      "teilnehmer_abgesagt": {
+        "name": "Teilnehmer Abgesagt"
+      },
+      "teilnehmer_ausstehend": {
+        "name": "Teilnehmer Ausstehend"
+      },
+      "einsatzort": {
+        "name": "Einsatzort"
+      },
+      "tts_text": {
+        "name": "TTS Text"
+      }
+    },
+    "button": {
+      "test_alarm": {
+        "name": "Test Alarm Auslösen"
+      },
+      "repeat_tts": {
+        "name": "TTS Wiederholen"
       }
     }
   }
