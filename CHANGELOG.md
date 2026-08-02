@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.5.0...v1.6.0) (2026-08-02)
+
+
+### Features
+
+* Repair auth handling, add binary sensor, fix long alarm texts ([3940cf6](https://github.com/seipekm/ha-blaulichtsms-dashboard/commit/3940cf6b42216fdc245823fa5d800810534d364b))
+
+
+### Bug Fixes
+
+* Restore the brand assets HACS validation requires ([c97b869](https://github.com/seipekm/ha-blaulichtsms-dashboard/commit/c97b86970af307764de5eefc8ecbc842bd68ae04))
+* Use the square icon and drop duplicated brand images ([7600f04](https://github.com/seipekm/ha-blaulichtsms-dashboard/commit/7600f043459db3ff6c3797296c92edd99f9fbe79))
+
 ## [1.5.0](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.4.0...v1.5.0) (2026-07-05)
 
 
