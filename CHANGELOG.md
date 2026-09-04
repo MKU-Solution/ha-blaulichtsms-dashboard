@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/MKU-Solution/ha-blaulichtsms-dashboard/compare/v1.6.0...v1.6.1) (2026-09-04)
+
+
+### Bug Fixes
+
+* Point metadata at the new MKU-Solution owner ([c9907f3](https://github.com/MKU-Solution/ha-blaulichtsms-dashboard/commit/c9907f3051c72c103d883a83aeac380ac4c552ff))
+
 ## [1.6.0](https://github.com/seipekm/ha-blaulichtsms-dashboard/compare/v1.5.0...v1.6.0) (2026-08-02)
 
 
