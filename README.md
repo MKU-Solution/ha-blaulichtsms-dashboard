@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seipekm/ha-blaulichtsms-dashboard/main/logo.png" alt="BlaulichtSMS Dashboard Logo" width="200">
+  <img src="https://raw.githubusercontent.com/MKU-Solution/ha-blaulichtsms-dashboard/main/logo.png" alt="BlaulichtSMS Dashboard Logo" width="200">
 </p>
 
 # BlaulichtSMS Dashboard für Home Assistant
